@@ -3,8 +3,10 @@ const displayValue = document.querySelector('.display-number')                  
 const pmButton = document.querySelector('.button-plusminus')                    //!Кнопка равно
 const totalButton = document.querySelector('.button-total')  
 const sqrtButton =  document.querySelector('.button-sqrt')
-const dotButton = document.querySelector('.button-dot')                  
+const dotButton = document.querySelector('.button-dot')
+const clearButton = document.querySelector('.button-clear') 
 
+const btns = document.querySelectorAll('.btn')            
 const keys = document.querySelectorAll('.key')                                  //!Кнопки с цифрами
 const actions = document.querySelectorAll('.action')                            //!Кнопки операторов
 
@@ -13,12 +15,30 @@ let isProccessing = false
 let terms = [0]
 displayValue.textContent = terms[0]
 
+disableButtons = () => {
+    for(let btn of btns) {
+        btn.disabled = true
+    }
+} 
+
+
+clearButton.onclick = () => {
+    let terms = [0]
+    displayValue.textContent = terms[0]
+    displayAction.textContent = '='
+    for(let btn of btns) {
+        btn.disabled = false
+    }
+    isProccessing = false
+}
+
 for(let key of keys) {
     key.addEventListener('click', function() {                                                                  //!Отвечает за вывод чисел на дисплей
         if(displayValue.textContent.length > 8) {
             displayValue.textContent = 'Error'
+            disableButtons()
         } else {
-            if(displayValue.textContent != '0' && displayValue.textContent != 'Error' && displayValue.textContent != 'Infinity' && displayValue.textContent != 'NaN' && !isProccessing) {
+            if(displayValue.textContent != '0' && !isProccessing) {
                 displayValue.textContent += key.textContent 
                } else {
                 displayValue.textContent = key.textContent 
@@ -40,6 +60,10 @@ for(let action of actions) {                                                    
                 displayValue.textContent = '0'
             } else {
                 displayValue.textContent = calculate(terms)
+                if(displayValue.textContent.length > 9) {
+                    displayValue.textContent = 'Error'
+                    disableButtons()
+                }
                 terms[0] = Number(displayValue.textContent)
                 terms.pop()
                 isProccessing = true
@@ -58,44 +82,68 @@ dotButton.onclick = function() {
 }
 
 pmButton.onclick = function() {
-    displayValue.textContent = Number(displayValue.textContent) * -1
+    if(displayAction.textContent == '=') {
+        displayValue.textContent = Number(displayValue.textContent) * -1
+        terms[0] = Number(displayValue.textContent)
+    } else {
+        displayValue.textContent = Number(displayValue.textContent) * -1
+    }
 }
 
 sqrtButton.onclick = function() {
     let result = Math.sqrt(Number(displayValue.textContent))
-    if(result % Math.trunc(result) !== 0) {
-        displayValue.textContent = result.toFixed(2) 
+    if(displayAction.textContent == '=') {
+        displayValue.textContent = fix(result)
+        terms[0] = Number(displayValue.textContent)
+        displayAction.textContent = '='
     } else {
-        displayValue.textContent = result
+        displayValue.textContent = fix(result)
     }
-    displayAction.textContent = '='
     
 }
 
-
-function division(numbers) {                                                    //!Деление
-    let result = numbers[0] / numbers[1]
-    
-    if(result % Math.trunc(result) !== 0) {
-        return result.toFixed(2)
+fix = (x) => {
+    if(x % Math.trunc(x) !== 0) {
+       return x.toFixed(2) 
     } else {
-        return result
-    }
-    
+        return x
+    }    
+}
+
+
+function division(numbers) {                                             
+    let result = numbers[0] / numbers[1]
+    return fix(result)   
+}
+function sum(numbers) {                                                  
+    let result = numbers[0] + numbers[1]
+    return fix(result)   
+}
+function multiply(numbers) {                                             
+    let result = numbers[0] * numbers[1]
+    return fix(result)   
+}
+function subtraction(numbers) {                                          
+    let result = numbers[0] - numbers[1]
+    return fix(result)   
+}
+function degree(numbers) {                                               
+    let result = numbers[0] ** numbers[1]
+    return fix(result)   
 }
 
 
 function calculate(numbers) {
     if(displayAction.textContent == '+') {                                              //! Функция вычисления
-        return numbers[0] + numbers[1]
+        return sum(numbers)
     } else if(displayAction.textContent == '-') {
-        return numbers[0] - numbers[1]
+        return subtraction(numbers)
     } else if(displayAction.textContent == '*') {
-        return numbers[0] * numbers[1] 
+        return multiply(numbers) 
     } else if(displayAction.textContent == '/') {
         return division(numbers)
     } else if(displayAction.textContent == '^'){
-        return numbers[0] ** numbers[1]  
+        return degree(numbers)  
     } 
 }
 
@@ -109,14 +157,10 @@ totalButton.onclick = function() {                                              
 
     if(displayValue.textContent.length > 9) {
         displayValue.textContent = 'Error'
+        disableButtons()
     }
     displayAction.textContent = '='
 }
 
-//? Разобраться с функцией квадратного корня 
-
 //? Добавить функцию "зависания" программы при недопустимых значениях на табло
 
-//? Разобраться с большими дробными остатками при сложении и умножении 
-
-//? Переделать кнопку сброса
